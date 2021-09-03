@@ -1,0 +1,5 @@
+if(WIN32)
+	add_subdirectory(TwitchStreamerApp)
+	add_subdirectory(TwitchStreamerLib)
+	add_subdirectory(ObsInfo)
+endif()

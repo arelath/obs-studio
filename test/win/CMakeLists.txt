@@ -11,3 +11,5 @@ target_link_libraries(win-test
 	libobs)
 set_target_properties(win-test PROPERTIES FOLDER "tests and examples")
 define_graphic_modules(win-test)
+
+install_obs_core(win-test)

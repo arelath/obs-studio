@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Framework.h"
+#include "obs.h"
+
+#include <string>
+
+class TSL_EXPORT Descriptor {
+	const std::string mTypeName;
+public:
+	Descriptor(const char *mTypeName) : mTypeName(mTypeName) {}
+
+	inline const char *GetTypeName() const { return mTypeName.c_str(); } 
+};
+
+class TSL_EXPORT SourceDescriptor : public Descriptor {
+public:
+	SourceDescriptor(const char *typeName) : Descriptor(typeName) {}
+};
+
+class TSL_EXPORT FilterDescriptor : public Descriptor {
+public:
+	FilterDescriptor(const char *typeName) : Descriptor(typeName) {}
+};
