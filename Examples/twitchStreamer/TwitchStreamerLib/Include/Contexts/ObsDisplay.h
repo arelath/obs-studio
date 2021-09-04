@@ -32,21 +32,25 @@ public:
 	// Helper class to pause active outputs and restore them on destruction. 
 	class PauseDisplayIfRequired {
 		bool resumeRequired = true;
-		obs_display_t *mDisplay = nullptr;
+		DisplayContextPtr mDisplay;
 
 	public:
-		PauseDisplayIfRequired(obs_display_t *displayContext)
+		PauseDisplayIfRequired(DisplayContextPtr displayContext)
 			: mDisplay(displayContext)
 		{
-			resumeRequired = obs_display_enabled(mDisplay);
+			obs_display_t *display = *mDisplay;
+			resumeRequired = obs_display_enabled(display);
 			if (resumeRequired)
-				obs_display_set_enabled(mDisplay, false);
+				obs_display_set_enabled(display, false);
 		}
 
 		~PauseDisplayIfRequired()
 		{
 			if (resumeRequired)
-				obs_display_set_enabled(mDisplay, true);
+			{
+				obs_display_t *display = *mDisplay;
+				obs_display_set_enabled(display, true);
+			}
 		}
 	};
 

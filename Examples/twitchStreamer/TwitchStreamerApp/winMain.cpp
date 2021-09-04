@@ -82,10 +82,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		obsw->AddScene("TwitchStreamerScene");
 
 		// You can list out all the sources as well with the enumerators
-		obsw->GetEnumerator()->EnumerateSources();
 		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryByName("monitor_capture");
 		SourceContextPtr monitor = sourceFactory->Create("Primary Monitor");
-		obsw->AddToCurrentScene(monitor);
+		obsw->AddToCurrentScene(monitor, "Primary Monitor");
 
 		obsw->AddOutputWindow(hwnd);
 		obsw->Start();

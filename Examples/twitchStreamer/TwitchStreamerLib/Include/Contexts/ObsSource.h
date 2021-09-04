@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "Framework.h"
 #include "ObsObjectContext.h"
 

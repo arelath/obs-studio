@@ -9,17 +9,20 @@
 
 MAKE_SHARED_CLASS(Logger);
 MAKE_SHARED_CLASS(ObsWrapper);
+MAKE_SHARED_CLASS(SceneItemContext);
 
 class ObsWrapper
 {
 public:
-	virtual ~ObsWrapper();
+	static ObsWrapperPtr CreateOBSOnPrimaryMonitor(uint32_t ouputWidth, uint32_t outputHeight);
 
+	// Only for testing purposes - mostly hardcoded values and might be removed in a final version
 	static ObsWrapperPtr CreateOBS();
 
+	// This finds all public sources, filters, inputs ect so we can list them off to the user in a UI
 	SourceEnumerator* GetEnumerator() { return &mSourceEnumerator; }
 
-	bool AddToCurrentScene(SourceContextPtr source);
+	bool AddToCurrentScene(SourceContextPtr source, const std::string &name);
 
 	bool AddOutputWindow(HWND hwnd);
 	bool RemoveOutputWindow(HWND hwnd);
@@ -35,6 +38,8 @@ public:
 	
 	bool Start(uint32_t channel = 0, SceneContextPtr scene = nullptr);
 	bool Stop();
+
+	virtual ~ObsWrapper();
 
 private:
 	ObsWrapper();
@@ -62,7 +67,10 @@ private:
 
 	// Again, we could do more here (VR displays or something), but for now we're keeping it simple.
 	DisplayFactory mDisplayFactory;
-	std::map<HWND, DisplayContextPtr> mDisplays; 
+	std::map<HWND, DisplayContextPtr> mDisplays;
+	std::map<const std::string, SceneItemContextPtr> mSceneItems;
+
+	struct vec2 mWindowScale;
 
 	bool mIsReady = false;
 };

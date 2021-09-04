@@ -22,6 +22,7 @@ set(TwitchStreamerLib_Contexts_HEADERS
 	Include/Contexts/ObsFilter.h
 	Include/Contexts/ObsObjectDescriptors.h
 	Include/Contexts/ObsScene.h
+	Include/Contexts/ObsSceneItem.h
 	Include/Contexts/ObsSource.h)
 
 set(TwitchStreamerLib_SOURCES
