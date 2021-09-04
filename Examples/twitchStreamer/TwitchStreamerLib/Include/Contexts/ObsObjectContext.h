@@ -5,8 +5,12 @@
 
 #include <string>
 
+MAKE_SHARED_CLASS(ObjectContext);
+
 class TSL_EXPORT Descriptor {
+private:
 	const std::string mTypeName;
+
 public:
 	Descriptor(const char *mTypeName) : mTypeName(mTypeName) {}
 
@@ -21,4 +25,13 @@ public:
 class TSL_EXPORT FilterDescriptor : public Descriptor {
 public:
 	FilterDescriptor(const char *typeName) : Descriptor(typeName) {}
+};
+
+class TSL_EXPORT ObjectContext {
+protected:
+	std::string mName;
+
+public:
+	ObjectContext(const std::string &name) : mName(name) {}
+	const std::string & GetName() { return mName; }
 };

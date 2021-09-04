@@ -20,12 +20,14 @@ set(TwitchStreamerLib_Contexts_HEADERS
 	Include/Contexts/ObsDisplay.h
 	Include/Contexts/ObsFilter.h
 	Include/Contexts/ObsObjectDescriptors.h
+	Include/Contexts/ObsScene.h
 	Include/Contexts/ObsSource.h)
 
 set(TwitchStreamerLib_SOURCES
 	Source/Logger.cpp
 	Source/ObsWrapper.cpp
-	Source/SourceEnumerator.cpp)
+	Source/SourceEnumerator.cpp
+	Source/ObsDisplay.cpp)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

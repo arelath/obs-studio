@@ -5,12 +5,14 @@
 #include "Framework.h"
 #include "ObsObjectContext.h"
 
+MAKE_SHARED_CLASS(SourceContext);
+MAKE_SHARED_CLASS(SourceFactory);
 
-class TSL_EXPORT SourceContext {
+class TSL_EXPORT SourceContext : public ObjectContext {
 	obs_source_t *source;
 
 public:
-	inline SourceContext(obs_source_t *source) : source(source) {}
+	inline SourceContext(obs_source_t *source, const std::string & name) : ObjectContext(name), source(source) {}
 	inline ~SourceContext() { obs_source_release(source); }
 	inline operator obs_source_t *() { return source; }
 };
@@ -21,12 +23,13 @@ protected:
 	SourceDescriptor mSourceDescriptor;
 
 public:
-	SourceFactory(SourceDescriptor sourceDescriptor) : mSourceDescriptor(sourceDescriptor)
+	SourceFactory(const SourceDescriptor& sourceDescriptor) : mSourceDescriptor(sourceDescriptor)
 	{
 	}
 
-	virtual SourceContext Create(std::string name)
+	virtual SourceContextPtr Create(const std::string & name)
 	{
-		return SourceContext(obs_source_create(mSourceDescriptor.GetTypeName(), name.c_str(), NULL, NULL));
+		obs_source_t *source = obs_source_create(mSourceDescriptor.GetTypeName(), name.c_str(), NULL, NULL);
+		return std::make_shared<SourceContext>(source, name);
 	}
 };

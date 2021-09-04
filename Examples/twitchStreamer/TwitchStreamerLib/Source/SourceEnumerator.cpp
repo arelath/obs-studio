@@ -19,7 +19,7 @@ void SourceEnumerator::EnumerateSources()
 	int index = 0;
 	while (obs_enum_source_types(index++, &id))
 	{
-		cout << "Found source  type" << id << endl;
+		cout << "Found source type " << id << endl;
 
 	}
 
@@ -27,14 +27,23 @@ void SourceEnumerator::EnumerateSources()
 	while (obs_enum_input_types(index++, &id)) {
 		cout << "Found Input " << id << endl;
 
-		this->SourceFactoryMap.emplace(string(id), SourceFactory(SourceDescriptor(id)));
+		this->SourceFactoryMap.emplace(
+			string(id),
+			make_shared<SourceFactory>(SourceDescriptor(id)));
 	}
 
 	index = 0;
 	while (obs_enum_filter_types(index++, &id)) {
 		cout << "Found Filter " << id << endl;
 
-		this->FilterFactoryMap.emplace(string(id), FilterFactory(FilterDescriptor(id)));
+		this->FilterFactoryMap.emplace(
+			string(id),
+			make_shared <FilterFactory>(SourceDescriptor(id)));
 	}
+}
+
+SourceFactoryPtr SourceEnumerator::GetSourceFactoryByName(const std::string name)
+{
+	return this->SourceFactoryMap[name];
 }
 

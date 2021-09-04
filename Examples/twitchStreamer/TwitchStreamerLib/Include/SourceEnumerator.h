@@ -18,6 +18,7 @@ class FilterContext;
 
 class DisplayFactory;
 
+MAKE_SHARED_CLASS(SourceEnumerator);
 
 class SourceEnumerator {
 public:
@@ -26,9 +27,11 @@ public:
 	// we may have to enumerate these again if they change
 	void EnumerateSources();
 
+	SourceFactoryPtr GetSourceFactoryByName(const std::string name);
+
 private:
-	std::map<std::string, SourceFactory> SourceFactoryMap;
-	std::map<std::string, FilterFactory> FilterFactoryMap;
+	std::map<std::string, SourceFactoryPtr> SourceFactoryMap;
+	std::map<std::string, FilterFactoryPtr> FilterFactoryMap;
 
 };
 

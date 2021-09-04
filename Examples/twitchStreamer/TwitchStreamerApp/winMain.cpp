@@ -10,45 +10,12 @@
 
 #include <intrin.h>
 
-#include "SourceEnumerator.h"
+#include "ObsWrapper.h"
 
-static const int cx = 800;
-static const int cy = 600;
+static const int cx = 720;
+static const int cy = 480;
 
-/* --------------------------------------------------- */
-
-class SourceContext {
-	obs_source_t *source;
-
-public:
-	inline SourceContext(obs_source_t *source) : source(source) {}
-	inline ~SourceContext() { obs_source_release(source); }
-	inline operator obs_source_t *() { return source; }
-};
-
-/* --------------------------------------------------- */
-
-class SceneContext {
-	obs_scene_t *scene;
-
-public:
-	inline SceneContext(obs_scene_t *scene) : scene(scene) {}
-	inline ~SceneContext() { obs_scene_release(scene); }
-	inline operator obs_scene_t *() { return scene; }
-};
-
-/* --------------------------------------------------- */
-
-class DisplayContext {
-	obs_display_t *display;
-
-public:
-	inline DisplayContext(obs_display_t *display) : display(display) {}
-	inline ~DisplayContext() { obs_display_destroy(display); }
-	inline operator obs_display_t *() { return display; }
-};
-
-/* --------------------------------------------------- */
+bool windowSizeChanged = false;
 
 static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
 				  LPARAM lParam)
@@ -58,6 +25,10 @@ static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		break;
+	case WM_SIZE:	// Position or size change
+		windowSizeChanged = true;
+		break;
+
 
 	default:
 		return DefWindowProc(hwnd, message, wParam, lParam);
@@ -66,75 +37,12 @@ static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
 	return 0;
 }
 
-static void do_log(int log_level, const char *msg, va_list args, void *param)
-{
-	char bla[4096];
-	vsnprintf(bla, 4095, msg, args);
-
-	OutputDebugStringA(bla);
-	OutputDebugStringA("\n");
-
-	if (log_level < LOG_WARNING)
-		__debugbreak();
-
-	UNUSED_PARAMETER(param);
-}
-
-static void CreateOBS(HWND hwnd)
-{
-	RECT rc;
-	GetClientRect(hwnd, &rc);
-
-	if (!obs_startup("en-US", nullptr, nullptr))
-		throw "Couldn't create OBS";
-
-	struct obs_video_info ovi;
-	ovi.adapter = 0;
-	ovi.base_width = rc.right;
-	ovi.base_height = rc.bottom;
-	ovi.fps_num = 30000;
-	ovi.fps_den = 1001;
-	ovi.graphics_module = DL_OPENGL;
-	ovi.output_format = VIDEO_FORMAT_RGBA;
-	ovi.output_width = rc.right;
-	ovi.output_height = rc.bottom;
-
-	if (obs_reset_video(&ovi) != 0)
-		throw "Couldn't initialize video";
-}
-
-static DisplayContext CreateDisplay(HWND hwnd)
-{
-	RECT rc;
-	GetClientRect(hwnd, &rc);
-
-	gs_init_data info = {};
-	info.cx = rc.right;
-	info.cy = rc.bottom;
-	info.format = GS_RGBA;
-	info.zsformat = GS_ZS_NONE;
-	info.window.hwnd = hwnd;
-
-	return obs_display_create(&info, 0);
-}
-
-static void AddTestItems(obs_scene_t *scene, obs_source_t *source)
-{
-	obs_sceneitem_t *item = NULL;
-	struct vec2 scale;
-
-	vec2_set(&scale, 20.0f, 20.0f);
-
-	item = obs_scene_add(scene, source);
-	obs_sceneitem_set_scale(item, &scale);
-}
-
 static HWND CreateTestWindow(HINSTANCE instance)
 {
 	WNDCLASS wc;
 
 	memset(&wc, 0, sizeof(wc));
-	wc.lpszClassName = TEXT("bla");
+	wc.lpszClassName = TEXT("Streamer");
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.hInstance = instance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -143,22 +51,13 @@ static HWND CreateTestWindow(HINSTANCE instance)
 	if (!RegisterClass(&wc))
 		return 0;
 
-	return CreateWindow(TEXT("bla"), TEXT("bla"),
+	return CreateWindow(TEXT("Streamer"), TEXT("Streamer"),
 			    WS_OVERLAPPEDWINDOW | WS_VISIBLE, 1920 / 2 - cx / 2,
 			    1080 / 2 - cy / 2, cx, cy, NULL, NULL, instance,
 			    NULL);
 }
 
-/* --------------------------------------------------- */
 
-static void RenderWindow(void *data, uint32_t cx, uint32_t cy)
-{
-	obs_render_main_texture();
-
-	UNUSED_PARAMETER(data);
-	UNUSED_PARAMETER(cx);
-	UNUSED_PARAMETER(cy);
-}
 
 /* --------------------------------------------------- */
 
@@ -166,8 +65,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		   int numCmd)
 {
 	HWND hwnd = NULL;
-	base_set_log_handler(do_log, nullptr);
-
 	try {
 		hwnd = CreateTestWindow(instance);
 		if (!hwnd)
@@ -175,48 +72,18 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 
 		AllocConsole();
 
-		/* ------------------------------------------------------ */
-		/* create OBS */
-		CreateOBS(hwnd);
+		// TODO: Setup code here
+		ObsWrapperPtr obsw = ObsWrapper::CreateOBS();
+		obsw->AddScene("TwitchStreamerScene");
 
-		/* ------------------------------------------------------ */
-		/* load modules */
-		obs_load_all_modules();
+		// You can list out all the sources as well with the enumerators
+		obsw->GetEnumerator()->EnumerateSources();
+		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryByName("monitor_capture");
+		SourceContextPtr monitor = sourceFactory->Create("Primary Monitor");
+		obsw->AddToCurrentScene(monitor);
 
-		/* ------------------------------------------------------ */
-		/* create source */
-		SourceContext source = obs_source_create(
-			"random", "some randon source", NULL, nullptr);
-		if (!source)
-			throw "Couldn't create random test source";
-
-		/* ------------------------------------------------------ */
-		/* create filter */
-		SourceContext filter = obs_source_create(
-			"test_filter", "a nice green filter", NULL, nullptr);
-		if (!filter)
-			throw "Couldn't create test filter";
-		obs_source_filter_add(source, filter);
-
-		/* ------------------------------------------------------ */
-		/* create scene and add source to scene (twice) */
-		SceneContext scene = obs_scene_create("test scene");
-		if (!scene)
-			throw "Couldn't create scene";
-
-		AddTestItems(scene, source);
-
-		/* ------------------------------------------------------ */
-		/* set the scene as the primary draw source and go */
-		obs_set_output_source(0, obs_scene_get_source(scene));
-
-		SourceEnumerator enumerator;
-		enumerator.EnumerateSources();
-
-		/* ------------------------------------------------------ */
-		/* create display for output and set the output render callback */
-		DisplayContext display = CreateDisplay(hwnd);
-		obs_display_add_draw_callback(display, RenderWindow, nullptr);
+		obsw->AddOutputWindow(hwnd);
+		obsw->Start();
 
 		
 
@@ -224,13 +91,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		while (GetMessage(&msg, NULL, 0, 0)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+
+			if (windowSizeChanged)
+			{
+				windowSizeChanged = false;
+				obsw->ResetWindowSize(hwnd);
+			}
 		}
 
 	} catch (char *error) {
 		MessageBoxA(NULL, error, NULL, 0);
 	}
-
-	obs_shutdown();
 
 	blog(LOG_INFO, "Number of memory leaks: %ld", bnum_allocs());
 	DestroyWindow(hwnd);

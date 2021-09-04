@@ -1,28 +1,30 @@
 #pragma once
 
 #include "Framework.h"
-#include "obs.h"
+#include "ObsObjectContext.h"
 
 #include <string>
 
-class DisplayContext {
+MAKE_SHARED_CLASS(DisplayContext);
+
+class DisplayContext : public ObjectContext {
 	obs_display_t *display;
 
 public:
-	inline DisplayContext(obs_display_t *display) : display(display) {}
+	inline DisplayContext(HWND hWnd, uint32_t backgroundColor = 0);
 	inline ~DisplayContext() { obs_display_destroy(display); }
 	inline operator obs_display_t *() { return display; }
+
+
 };
 
+// Looks like this really isn't needed either since there's only one "type" of display and their hWnds in windows.
 class TSL_EXPORT DisplayFactory {
 	const char *mTypeName;
 
 public:
 	DisplayFactory(const char *typeName) : mTypeName(typeName) {}
 
-	DisplayContext Create(const gs_init_data *info,
-			      uint32_t backgroundColor = 0)
-	{
-		return obs_display_create(info, backgroundColor);
-	}
+	DisplayContextPtr Create(HWND hWnd, uint32_t backgroundColor = 0);
 };
+
