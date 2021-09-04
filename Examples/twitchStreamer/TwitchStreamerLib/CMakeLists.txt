@@ -10,6 +10,7 @@ find_package(Threads REQUIRED)
 set(TwitchStreamerLib_HEADERS
 	Include/Framework.h
 	Include/Logger.h
+	Include/MonitorUtils.h
 	Include/ObsWrapper.h
 	Include/SourceEnumerator.h
 	Include/TwitchStreamingLib.h)
@@ -25,6 +26,7 @@ set(TwitchStreamerLib_Contexts_HEADERS
 
 set(TwitchStreamerLib_SOURCES
 	Source/Logger.cpp
+	Source/MonitorUtils.cpp
 	Source/ObsWrapper.cpp
 	Source/SourceEnumerator.cpp
 	Source/ObsDisplay.cpp)

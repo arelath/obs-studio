@@ -26,21 +26,23 @@
 
 // Some help on error handling
 #ifdef USING_CUSTOM_LOGGING
-	#define LOG_INFO(msg) { Logger::Instance()->Log("Info: " + (msg) ); }
-	#define LOG_ERROR_NO_MSG() { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str() ); }
-	#define LOG_ERROR_MSG(msg) { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str(), msg ); }
-	#define LOG_ERROR_IF(x, msg) { if(x) { LOG_ERROR_MSG(msg); } }
+	#define OBS_LOG_INFO(msg) { Logger::Instance()->Log("Info: " + (msg) ); }
+	#define OBS_LOG_ERROR_NO_MSG() { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str() ); }
+	#define OBS_LOG_ERROR_MSG(msg) { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str(), msg ); }
+	#define OBS_LOG_ERROR_IF(x, msg) { if(x) { LOG_ERROR_MSG(msg); } }
 #else
-	#define GET_PROGRAM_PLACE_STRING()  (__FILE__ + std::string(":")  +  std::to_string(__LINE__))
-	#define LOG_ERROR_NO_MSG() { blog(LOG_ERROR, GET_PROGRAM_PLACE_STRING().c_str()); }
-	#define LOG_ERROR_MES(msg) { blog(LOG_ERROR, "%s %s", GET_PROGRAM_PLACE_STRING().c_str(), msg); }
-	#define LOG_ERROR_IF(x, msg) { blog(LOG_INFO, msg); }
+	#define OBS_GET_PROGRAM_PLACE_STRING()  (__FILE__ + std::string(":")  +  std::to_string(__LINE__))
+	#define OBS_LOG_ERROR_NO_MSG() { blog(LOG_ERROR, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
+	#define OBS_LOG_ERROR_MSG(msg) { blog(LOG_ERROR, "%s %s", OBS_GET_PROGRAM_PLACE_STRING().c_str(), msg); }
+	#define OBS_LOG_ERROR_IF(x, msg) { blog(LOG_INFO, msg); }
 #endif
 
 
-#define RETURN_IF_FAILED(x) { if((x) == false) { LOG_ERROR_NO_MSG(); return false; } }
-#define RETURN_BOOL(x) { RETURN_IF_FAILED(x); return true; }
-#define LOG_IF_FAILED(x) { if ((x) == false) LOG_ERROR_NO_MSG(); }
+#define OBS_RETURN_IF_FAILED(x) { if((x) == false) { OBS_LOG_ERROR_NO_MSG(); return false; } }
+#define OBS_RETURN_IF_FAILED_MSG(x, msg) { if((x) == false) { OBS_LOG_ERROR_MSG(msg); return false; } }
+#define OBS_RETURN_BOOL(x) { OBS_RETURN_IF_FAILED(x); return true; }
+#define OBS_LOG_IF_FAILED(x) { if ((x) == false) OBS_LOG_ERROR_NO_MSG(); }
+#define OBS_LOG_IF_FAILED_MSG(x, msg) { if ((x) == false) OBS_LOG_ERROR_MSG(msg); }
 
 #ifdef USING_NAPI
 

@@ -1,9 +1,11 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <debugapi.h>
-#include <fstream>
 #include <util/base.h>
 #include <chrono>
+
+#include <fstream>
+#include <iostream>
 
 #include "Logger.h"
 
@@ -26,7 +28,7 @@ static void do_log(int log_level, const char *msg, va_list args, void *param)
 	logger->LogStringChunk(bla, log_level);
 }
 
-string Logger::GetCurrentTimeString()
+const string Logger::GetCurrentTimeString() const
 {
 	using namespace std::chrono;
 
@@ -57,6 +59,9 @@ void Logger::LogString(const string &timeString, const string &str, int logLevel
 	msg += str;
 
 	logFile << msg << endl;
+	cout << msg << endl;
+
+	UNREFERENCED_PARAMETER(logLevel);
 }
 
 void Logger::LogStringChunk(char *str, int log_level)

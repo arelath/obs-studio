@@ -10,8 +10,7 @@ public:
 	void LogStringChunk(char *str, int log_level);
 
 private:
-	std::string GetCurrentTimeString();
-	
+	const std::string GetCurrentTimeString() const;
 	void LogString(const std::string &timeString, const std::string &str, int logLevel);
 
 	std::ofstream logFile;

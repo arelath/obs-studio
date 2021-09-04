@@ -9,6 +9,7 @@
 
 #include "ObsWrapper.h"
 #include "Logger.h"
+#include "MonitorUtils.h"
 
 using namespace std;
 
@@ -58,20 +59,34 @@ bool ObsWrapper::ResetVideo(
 	ovi.output_width = outputWidth;
 	ovi.output_height = outputHeight;
 
-	RETURN_BOOL(obs_reset_video(&ovi) == 0);
+	OBS_RETURN_BOOL(obs_reset_video(&ovi) == 0);
 }
 
 bool ObsWrapper::ResetWindowSize(HWND hwnd)
 {
 	RECT rect;
-	uint32_t width = 100;
-	uint32_t height = 100;
+	uint32_t windowWidth = 100;
+	uint32_t windowHeight = 100;
 	if (GetWindowRect(hwnd, &rect)) {
-		width = rect.right - rect.left;
-		height = rect.bottom - rect.top;
+		windowWidth = rect.right - rect.left;
+		windowHeight = rect.bottom - rect.top;
 	}
 
-	return ResetVideo(width, height, width, height);
+	uint32_t workingWidth = 100;
+	uint32_t workingHeight = 100;
+	MonitorUtils::GetPrimaryMonitorWorkingSize(workingWidth, workingHeight);
+
+	DisplayContextPtr displayContextPtr = mDisplays[hwnd];
+	OBS_RETURN_IF_FAILED_MSG(displayContextPtr == nullptr, "DisplayContext does not exist, cannot reize it.")
+
+	{
+		// This will pause the output so we can resize if if it's enabled and restore it to it's previous state once it's out of scope
+		DisplayContext::PauseDisplayIfRequired displayPause(*displayContextPtr);
+
+		OBS_RETURN_BOOL(ResetVideo(workingWidth, workingHeight, windowWidth, windowHeight));
+	}
+
+	return true;
 }
 
 ObsWrapper::~ObsWrapper()
@@ -90,14 +105,14 @@ bool ObsWrapper::AddOutputWindow(HWND hwnd)
 {
 	DisplayContextPtr displayContext = mDisplayFactory.Create(hwnd);
 	mDisplays[hwnd] = displayContext;
-	RETURN_BOOL(ResetWindowSize(hwnd));
+	OBS_RETURN_BOOL(ResetWindowSize(hwnd));
 }
 
 bool ObsWrapper::RemoveOutputWindow(HWND hwnd)
 {
 	auto display = mDisplays.find(hwnd);
-	RETURN_IF_FAILED(display == mDisplays.end());
-	RETURN_BOOL(static_cast<bool>(mDisplays.erase(hwnd)));
+	OBS_RETURN_IF_FAILED(display == mDisplays.end());
+	OBS_RETURN_BOOL(static_cast<bool>(mDisplays.erase(hwnd)));
 }
 
 
@@ -106,7 +121,7 @@ bool ObsWrapper::RemoveOutputWindow(HWND hwnd)
 std::shared_ptr<ObsWrapper> ObsWrapper::CreateOBS()
 {
 	ObsWrapperPtr wrapper = ObsWrapperPtr(new ObsWrapper());
-	LOG_IF_FAILED(wrapper->InitObs(720, 480, 720, 480));
+	OBS_LOG_IF_FAILED(wrapper->InitObs(720, 480, 720, 480));
 	return wrapper;
 }
 
@@ -124,7 +139,7 @@ bool ObsWrapper::Start(uint32_t channel, SceneContextPtr scene)
 		else
 		{
 			// If we don't have a scene, just create a default for ease.
-			RETURN_IF_FAILED(AddScene("default"));
+			OBS_RETURN_IF_FAILED(AddScene("default"));
 		}
 		
 	}
@@ -158,7 +173,7 @@ bool ObsWrapper::RemoveScene(const std::string& name)
 		mCurrentScene = nullptr;
 	}
 
-	RETURN_IF_FAILED(static_cast<bool>(mScenes.erase(name)));
+	OBS_RETURN_IF_FAILED(static_cast<bool>(mScenes.erase(name)));
 	return true;
 }
 

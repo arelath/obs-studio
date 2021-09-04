@@ -70,7 +70,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		if (!hwnd)
 			throw "Couldn't create main window";
 
+		// Debugging output to see log in realtime. normal std input and output can be used in this console
 		AllocConsole();
+		FILE *fDummy;
+		freopen_s(&fDummy, "CONIN$", "r", stdin);
+		freopen_s(&fDummy, "CONOUT$", "w", stderr);
+		freopen_s(&fDummy, "CONOUT$", "w", stdout);
 
 		// TODO: Setup code here
 		ObsWrapperPtr obsw = ObsWrapper::CreateOBS();
@@ -84,8 +89,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 
 		obsw->AddOutputWindow(hwnd);
 		obsw->Start();
-
-		
 
 		MSG msg;
 		while (GetMessage(&msg, NULL, 0, 0)) {
