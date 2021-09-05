@@ -38,9 +38,16 @@ bool ObsWrapper::InitObs(
 	if (!ResetVideo(baseWidth, baseHeight, outputWidth, outputHeight))
 		throw "Couldn't initialize video";
 
+	obs_audio_info oai = {};
+	oai.speakers = SPEAKERS_MONO;
+	oai.samples_per_sec = 44100;
+	if (!obs_reset_audio(&oai))
+		throw "Couldn't initialize audio";
+
+
 	obs_load_all_modules();
 
-	mSourceEnumerator.EnumerateSources();
+	mObsEnumerator.EnumerateSources();
 
 	return true;
 }

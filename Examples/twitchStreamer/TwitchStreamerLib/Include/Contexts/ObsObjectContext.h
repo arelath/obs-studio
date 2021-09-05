@@ -27,6 +27,18 @@ public:
 	FilterDescriptor(const char *typeName) : Descriptor(typeName) {}
 };
 
+class TSL_EXPORT EncoderDescriptor : public Descriptor {
+	obs_encoder_type mEncoderType;
+
+public:
+	EncoderDescriptor(const char *typeName) : Descriptor(typeName)
+	{
+		mEncoderType = obs_get_encoder_type(typeName);
+	}
+
+	obs_encoder_type GetEncoderType() { return mEncoderType; }
+};
+
 class TSL_EXPORT ObjectContext {
 protected:
 	std::string mName;

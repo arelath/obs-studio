@@ -22,8 +22,8 @@ static void do_log(int log_level, const char *msg, va_list args, void *param)
 	OutputDebugStringA(bla);
 	OutputDebugStringA("\n");
 
-	if (log_level <= LOG_ERROR && IsDebuggerPresent())
-		__debugbreak();
+	//if (log_level <= LOG_ERROR && IsDebuggerPresent())
+	//	__debugbreak();
 
 	logger->LogStringChunk(bla, log_level);
 }

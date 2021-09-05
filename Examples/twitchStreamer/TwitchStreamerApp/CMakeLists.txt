@@ -3,19 +3,22 @@ project(TwitchStreamerApp)
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/libobs")
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/Examples/twitchStreamer/TwitchStreamerLib/Include")
 
-find_package(Threads REQUIRED)
+if(MSVC)
+	set(TwitchStreamerApp_PLATFORM_DEPS
+		w32-pthreads)
+endif()
 
 
 set(TwitchStreamerApp_HEADERS)
 
 set(TwitchStreamerApp_SOURCES
+	${TwitchStreamerApp_PLATFORM_SOURCES}
 	winMain.cpp)
 
 source_group("importers\\Source Files" FILES ${obs_importers_SOURCES})
 source_group("importers\\Header Files" FILES ${obs_importers_HEADERS})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 
 if(WIN32)
 	set(obs_PLATFORM_LIBRARIES
@@ -27,8 +30,7 @@ if(WIN32)
 endif()
 
 if(MSVC)
-	set(obs_PLATFORM_LIBRARIES
-		${obs_PLATFORM_LIBRARIES}
+	set(TwitchStreamerApp_PLATFORM_LIBRARIES
 		w32-pthreads)
 endif()
 
@@ -37,7 +39,7 @@ add_executable(TwitchStreamerApp WIN32
 	${TwitchStreamerApp_SOURCES})
 
 target_link_libraries(TwitchStreamerApp
-	Threads::Threads
+	${TwitchStreamerApp_PLATFORM_DEPS}
 	libobs
 	TwitchStreamerLib)
 

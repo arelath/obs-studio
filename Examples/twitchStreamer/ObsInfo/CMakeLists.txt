@@ -5,9 +5,9 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/Examples/twitchStreamer/TwitchSt
 
 find_package(Threads REQUIRED)
 
-set(TwitchStreamerApp_HEADERS)
+set(ObsInfo_HEADERS)
 
-set(TwitchStreamerApp_SOURCES
+set(ObsInfo_SOURCES
 	main.cpp)
 
 source_group("importers\\Source Files" FILES ${obs_importers_SOURCES})
@@ -32,8 +32,8 @@ if(MSVC)
 endif()
 
 add_executable(ObsInfo
-	${TwitchStreamerApp_HEADERS}
-	${TwitchStreamerApp_SOURCES})
+	${ObsInfo_HEADERS}
+	${ObsInfo_SOURCES})
 
 target_link_libraries(ObsInfo
 	Threads::Threads

@@ -9,6 +9,8 @@
 #include "Contexts/ObsObjectDescriptors.h"
 #include "Contexts/ObsSource.h"
 #include "Contexts/ObsFilter.h"
+#include "Contexts/ObsServices.h"
+#include "Contexts/ObsEncoder.h"
 
 class SourceDescriptor;
 class SourceContext;
@@ -18,12 +20,18 @@ class FilterContext;
 
 class DisplayFactory;
 
-MAKE_SHARED_CLASS(SourceEnumerator);
+class ServiceDescritor;
+class ServiceFactory;
 
-class SourceEnumerator {
+class EncoderDescriptor;
+class EncoderFactory;
+
+MAKE_SHARED_CLASS(ObsEnumerator);
+MAKE_SHARED_CLASS(ServiceFactory);
+MAKE_SHARED_CLASS(EncoderFactory);
+
+class TSL_EXPORT ObsEnumerator {
 public:
-	SourceEnumerator();
-
 	// we may have to enumerate these again if they change
 	void EnumerateSources();
 
@@ -32,6 +40,9 @@ public:
 private:
 	std::map<std::string, SourceFactoryPtr> SourceFactoryMap;
 	std::map<std::string, FilterFactoryPtr> FilterFactoryMap;
+	std::map<std::string, ServiceFactoryPtr> ServiceFactoryMap;
+	std::map<std::string, VideoEncoderFactoryPtr> VideoEncoderFactoryMap;
+	std::map<std::string, AudioEncoderFactoryPtr> AudioEncoderFactoryMap;
 
 };
 

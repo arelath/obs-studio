@@ -17,6 +17,8 @@ static const int cy = 480;
 
 bool windowSizeChanged = false;
 
+const char *privateKey = "live_724000879_nWZk5D5ghyn4Vt8Z9aM6Asv8Q16hG9";
+
 static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
 				  LPARAM lParam)
 {
@@ -97,7 +99,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 			if (windowSizeChanged)
 			{
 				windowSizeChanged = false;
-				obsw->ResetWindowSize(hwnd);
+				//obsw->ResetWindowSize(hwnd);
 			}
 		}
 

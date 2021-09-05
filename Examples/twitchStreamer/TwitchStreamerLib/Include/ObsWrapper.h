@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Framework.h"
-#include "SourceEnumerator.h"
+#include "ObsEnumerator.h"
 #include "Contexts/ObsScene.h"
 #include "Contexts/ObsDisplay.h"
 
@@ -11,7 +11,7 @@ MAKE_SHARED_CLASS(Logger);
 MAKE_SHARED_CLASS(ObsWrapper);
 MAKE_SHARED_CLASS(SceneItemContext);
 
-class ObsWrapper
+class TSL_EXPORT ObsWrapper
 {
 public:
 	static ObsWrapperPtr CreateOBSOnPrimaryMonitor(uint32_t ouputWidth, uint32_t outputHeight);
@@ -20,7 +20,7 @@ public:
 	static ObsWrapperPtr CreateOBS();
 
 	// This finds all public sources, filters, inputs ect so we can list them off to the user in a UI
-	SourceEnumerator* GetEnumerator() { return &mSourceEnumerator; }
+	ObsEnumerator* GetEnumerator() { return &mObsEnumerator; }
 
 	bool AddToCurrentScene(SourceContextPtr source, const std::string &name);
 
@@ -57,7 +57,7 @@ private:
 			uint32_t outputWidth, uint32_t outputHeight);
 
 	LoggerPtr mLogger;
-	SourceEnumerator mSourceEnumerator;
+	ObsEnumerator mObsEnumerator;
 
 	SceneContextPtr mCurrentScene;
 	std::map<std::string, SceneContextPtr> mScenes;

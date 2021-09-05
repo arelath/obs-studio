@@ -5,31 +5,32 @@ include_directories(SYSTEM "Include")
 
 add_definitions(-DTWITCH_STREAMING_LIBRARY_DLL)
 
-find_package(Threads REQUIRED)
-
 set(TwitchStreamerLib_HEADERS
 	Include/Framework.h
 	Include/Logger.h
 	Include/MonitorUtils.h
 	Include/ObsWrapper.h
-	Include/SourceEnumerator.h
+	Include/ObsEnumerator.h
 	Include/TwitchStreamingLib.h)
 
 set(TwitchStreamerLib_Contexts_HEADERS
 	Include/Contexts/ObsAudio.h
 	Include/Contexts/ObsObjectContext.h
 	Include/Contexts/ObsDisplay.h
+	Include/Contexts/ObsEncoder.h
 	Include/Contexts/ObsFilter.h
 	Include/Contexts/ObsObjectDescriptors.h
 	Include/Contexts/ObsScene.h
 	Include/Contexts/ObsSceneItem.h
+	Include/Contexts/ObsServices.h
 	Include/Contexts/ObsSource.h)
 
 set(TwitchStreamerLib_SOURCES
+	${TwitchStreamerLib_PLATFORM_SOURCES}
 	Source/Logger.cpp
 	Source/MonitorUtils.cpp
 	Source/ObsWrapper.cpp
-	Source/SourceEnumerator.cpp
+	Source/ObsEnumerator.cpp
 	Source/ObsDisplay.cpp)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -45,13 +46,13 @@ if(MSVC)
 		w32-pthreads)
 endif()
 
-add_library(TwitchStreamerLib
+add_library(TwitchStreamerLib SHARED
 	${TwitchStreamerLib_SOURCES}
 	${TwitchStreamerLib_Contexts_HEADERS}
 	${TwitchStreamerLib_HEADERS})
 
 target_link_libraries(TwitchStreamerLib
-	Threads::Threads
+	${TwitchStreamerApp_PLATFORM_DEPS}
 	libobs)
 
 set_target_properties(TwitchStreamerLib
