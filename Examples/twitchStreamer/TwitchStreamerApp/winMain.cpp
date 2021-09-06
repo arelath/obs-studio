@@ -17,6 +17,12 @@ static const int cy = 480;
 
 bool windowSizeChanged = false;
 
+const char *videoEncoderId = "obs_x264";
+const char *audioEncoderId = "CoreAudio_AAC";
+const char *serviceId = "rtmp_common";
+const char *streamingOutputId = "rtmp_output";
+const char *displaySourceId = "monitor_capture";
+
 const char *privateKey = "live_724000879_nWZk5D5ghyn4Vt8Z9aM6Asv8Q16hG9";
 
 static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
@@ -84,9 +90,34 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		obsw->AddScene("TwitchStreamerScene");
 
 		// You can list out all the sources as well with the enumerators
-		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryByName("monitor_capture");
+		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryById(displaySourceId);
 		SourceContextPtr monitor = sourceFactory->Create("Primary Monitor");
 		obsw->AddToCurrentScene(monitor, "Primary Monitor");
+
+
+
+		// This will be set as the current output until we set it to something else and everything added to it.
+		obsw->CreateOutput("rtmp_output", "TwitchStream");	// TODO: configure this for twitch
+
+
+		auto videoEncoder =
+			obsw->GetEnumerator()
+				->GetVideoEncoderFactoryById("obs_x264")
+				->Create("Video Encoder");
+
+		auto audioEncoder =
+			obsw->GetEnumerator()
+				->GetAudioEncoderFactoryById("CoreAudio_AAC")
+				->Create("Audio Encoder");
+								  
+
+		obsw->SetVideoEncoderOnCurrentOutput(videoEncoder);
+		obsw->SetAudioEncoderOnCurrentOutput(audioEncoder, 0);
+
+		/*ServiceFactoryPtr servicesFactory =
+			obsw->GetEnumerator()
+				->GetServicesFactoryById("rtmp_common")
+				->Create(;*/
 
 		obsw->AddOutputWindow(hwnd);
 		obsw->Start();

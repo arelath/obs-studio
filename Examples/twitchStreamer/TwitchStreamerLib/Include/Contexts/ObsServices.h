@@ -8,7 +8,7 @@ MAKE_SHARED_CLASS(SericeFactory);
 /* class TSL_EXPORT SericeFactory : public SourceFactory {
 
 public:
-	ServiceFactory(const SourceDescriptor &sourceDescriptor)
+	ServiceFactory(const Descriptor &sourceDescriptor)
 		: SourceFactory(sourceDescriptor)
 	{
 	}
@@ -17,7 +17,7 @@ public:
 	{
 		// TODO: Will this be different? If not, remove it
 		obs_source_t *source =
-			obs_source_create(mSourceDescriptor.GetTypeName(),
+			obs_services_create(mSourceDescriptor.GetTypeName(),
 					  name.c_str(), NULL, NULL);
 		return std::make_shared<SourceContext>(source, name);
 	}

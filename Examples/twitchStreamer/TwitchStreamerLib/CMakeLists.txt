@@ -15,15 +15,18 @@ set(TwitchStreamerLib_HEADERS
 
 set(TwitchStreamerLib_Contexts_HEADERS
 	Include/Contexts/ObsAudio.h
+	Include/Contexts/ObsDescriptors.h
 	Include/Contexts/ObsObjectContext.h
 	Include/Contexts/ObsDisplay.h
 	Include/Contexts/ObsEncoder.h
 	Include/Contexts/ObsFilter.h
 	Include/Contexts/ObsObjectDescriptors.h
+	Include/Contexts/ObsOutputs.h
 	Include/Contexts/ObsScene.h
 	Include/Contexts/ObsSceneItem.h
 	Include/Contexts/ObsServices.h
-	Include/Contexts/ObsSource.h)
+	Include/Contexts/ObsSource.h
+	Include/Contexts/ObsVideo.h)
 
 set(TwitchStreamerLib_SOURCES
 	${TwitchStreamerLib_PLATFORM_SOURCES}

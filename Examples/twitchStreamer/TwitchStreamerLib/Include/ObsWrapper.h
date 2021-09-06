@@ -6,10 +6,12 @@
 #include "ObsEnumerator.h"
 #include "Contexts/ObsScene.h"
 #include "Contexts/ObsDisplay.h"
+#include "Contexts/ObsOutputs.h"
 
 MAKE_SHARED_CLASS(Logger);
 MAKE_SHARED_CLASS(ObsWrapper);
 MAKE_SHARED_CLASS(SceneItemContext);
+MAKE_SHARED_CLASS(VideoEncoderContext);
 
 class TSL_EXPORT ObsWrapper
 {
@@ -19,13 +21,25 @@ public:
 	// Only for testing purposes - mostly hardcoded values and might be removed in a final version
 	static ObsWrapperPtr CreateOBS();
 
+	bool ObsWrapper::CreateOutput(
+		const std::string &id, // Must exist in the enumerated output types
+		const std::string &name,
+		obs_data_t *data = nullptr,
+		obs_data_t *settings = nullptr);
+
 	// This finds all public sources, filters, inputs ect so we can list them off to the user in a UI
 	ObsEnumerator* GetEnumerator() { return &mObsEnumerator; }
 
 	bool AddToCurrentScene(SourceContextPtr source, const std::string &name);
 
+	// Outputs do things like stream or encode vide/audio
+
 	bool AddOutputWindow(HWND hwnd);
 	bool RemoveOutputWindow(HWND hwnd);
+
+	bool SetVideoEncoderOnCurrentOutput(VideoEncoderContextPtr videoEnocoder);
+	bool SetAudioEncoderOnCurrentOutput(AudioEncoderContextPtr audioEncoder,
+					    size_t outputChannel = 0);
 
 	bool ResetWindowSize(HWND hwnd);
 
@@ -53,13 +67,21 @@ private:
 		uint32_t outputWidth,
 		uint32_t outputHeight);
 
-	bool ResetVideo(uint32_t baseWidth, uint32_t baseHeight,
-			uint32_t outputWidth, uint32_t outputHeight);
+	bool ResetVideo(
+		uint32_t baseWidth,
+		uint32_t baseHeight,
+		uint32_t outputWidth,
+		uint32_t outputHeight);
 
 	LoggerPtr mLogger;
 	ObsEnumerator mObsEnumerator;
 
+	// There can be more than one, this just makes it easier to set up and forget.
 	SceneContextPtr mCurrentScene;
+
+	// There can be more than one, this just makes it easier to set up and forget.
+	OutputContextPtr mCurrentOutputContext;	
+
 	std::map<std::string, SceneContextPtr> mScenes;
 
 	// Probably won't ever need more than one, but since everything else if using a factory, we might as well

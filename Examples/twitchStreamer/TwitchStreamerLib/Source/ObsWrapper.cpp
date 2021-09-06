@@ -120,6 +120,39 @@ bool ObsWrapper::AddToCurrentScene(SourceContextPtr source, const string & name)
 	OBS_RETURN_BOOL(item->SetItemScale(this->mWindowScale));
 }
 
+bool ObsWrapper::CreateOutput(
+	const std::string &id,	// Must exist in the enumerated output types
+	const std::string &name,
+	obs_data_t *data,
+	obs_data_t *settings)
+{
+	// TODO: Error checking for identical names
+	mCurrentOutputContext = mObsEnumerator.GetOutputFactoryById(id)->Create(name, data, settings);
+	return true;
+}
+
+bool ObsWrapper::SetVideoEncoderOnCurrentOutput(VideoEncoderContextPtr encoder)
+{
+	OBS_RETURN_IF_FAILED_MSG(
+		mCurrentOutputContext != nullptr,
+		"Must have a current scene before adding items to it.");
+
+	obs_output_set_video_encoder(*mCurrentOutputContext, *encoder);
+
+	return true;
+}
+
+bool ObsWrapper::SetAudioEncoderOnCurrentOutput(AudioEncoderContextPtr encoder, size_t outputChannel)
+{
+	OBS_RETURN_IF_FAILED_MSG(
+		mCurrentOutputContext != nullptr,
+		"Must have a current scene before adding items to it.");
+
+	obs_output_set_audio_encoder(*mCurrentOutputContext, *encoder, outputChannel);
+
+	return true;
+}
+
 bool ObsWrapper::AddOutputWindow(HWND hwnd)
 {
 	DisplayContextPtr displayContext = mDisplayFactory.Create(hwnd);

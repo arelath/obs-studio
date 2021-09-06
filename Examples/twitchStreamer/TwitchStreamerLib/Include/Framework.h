@@ -23,18 +23,22 @@
 // This creates a shared_ptr<type> with the name typePtr
 #define MAKE_SHARED_CLASS(type) class type; typedef std::shared_ptr<type> type##Ptr
 
-
 // Some help on error handling
+#define OBS_GET_PROGRAM_PLACE_STRING() (__FILE__ + std::string(":") + std::to_string(__LINE__))
+
 #ifdef USING_CUSTOM_LOGGING
 	#define OBS_LOG_INFO(msg) { Logger::Instance()->Log("Info: " + (msg) ); }
 	#define OBS_LOG_ERROR_NO_MSG() { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str() ); }
 	#define OBS_LOG_ERROR_MSG(msg) { Logger::Instance()->Log( "Error: " __FILE__, std::to_string(__LINE__).c_str(), msg ); }
 	#define OBS_LOG_ERROR_IF(x, msg) { if(x) { LOG_ERROR_MSG(msg); } }
+	#define OBS_LOG_WARNING(msg) { LOG_WARNING_MSG(msg); }
+	#define OBS_LOG_INFO(msg) { LOG_WARNING_MSG(msg); }
 #else
-	#define OBS_GET_PROGRAM_PLACE_STRING()  (__FILE__ + std::string(":")  +  std::to_string(__LINE__))
 	#define OBS_LOG_ERROR_NO_MSG() { blog(LOG_ERROR, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
-	#define OBS_LOG_ERROR_MSG(msg) { blog(LOG_ERROR, "%s %s", OBS_GET_PROGRAM_PLACE_STRING().c_str(), msg); }
-	#define OBS_LOG_ERROR_IF(x, msg) { blog(LOG_INFO, msg); }
+	#define OBS_LOG_ERROR_MSG(msg) { blog(LOG_ERROR, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
+	#define OBS_LOG_ERROR_IF(x, msg) { blog(LOG_ERROR, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str(); ); }
+	#define OBS_LOG_WARNING(msg) { blog(LOG_WARNING, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
+	#define OBS_LOG_INFO(msg) { blog(LOG_INFO, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
 #endif
 
 
