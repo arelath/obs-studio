@@ -9,7 +9,7 @@ private:
 public:
 	Descriptor(const char *mTypeName) : mTypeName(mTypeName) {}
 
-	inline const char *GetTypeName() const { return mTypeName.c_str(); }
+	const char *GetTypeName() const { return mTypeName.c_str(); }
 };
 
 class TSL_EXPORT SourceDescriptor : public Descriptor {

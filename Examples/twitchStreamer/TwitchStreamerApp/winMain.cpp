@@ -11,9 +11,11 @@
 #include <intrin.h>
 
 #include "ObsWrapper.h"
+#include "ObsEnumerator.h"
+#include "Contexts/ObsServices.h"
 
-static const int cx = 720;
-static const int cy = 480;
+static const int cx = 1280;
+static const int cy = 720;
 
 bool windowSizeChanged = false;
 
@@ -23,6 +25,7 @@ const char *serviceId = "rtmp_common";
 const char *streamingOutputId = "rtmp_output";
 const char *displaySourceId = "monitor_capture";
 
+// Settings are {"settings":{"bwtest":false,"key":"live_724000879_nWZk5D5ghyn4Vt8Z9aM6Asv8Q16hG9","server":"rtmp://live-sea.twitch.tv/app","service":"Twitch"},"type":"rtmp_common"}
 const char *privateKey = "live_724000879_nWZk5D5ghyn4Vt8Z9aM6Asv8Q16hG9";
 
 static LRESULT CALLBACK sceneProc(HWND hwnd, UINT message, WPARAM wParam,
@@ -60,8 +63,8 @@ static HWND CreateTestWindow(HINSTANCE instance)
 		return 0;
 
 	return CreateWindow(TEXT("Streamer"), TEXT("Streamer"),
-			    WS_OVERLAPPEDWINDOW | WS_VISIBLE, 1920 / 2 - cx / 2,
-			    1080 / 2 - cy / 2, cx, cy, NULL, NULL, instance,
+			    WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100,
+			    100, cx, cy, NULL, NULL, instance,
 			    NULL);
 }
 
@@ -85,41 +88,80 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine,
 		freopen_s(&fDummy, "CONOUT$", "w", stderr);
 		freopen_s(&fDummy, "CONOUT$", "w", stdout);
 
+		//WaitForDebuggerToAttach();
+
 		// TODO: Setup code here
 		ObsWrapperPtr obsw = ObsWrapper::CreateOBS();
-		obsw->AddScene("TwitchStreamerScene");
 
-		// You can list out all the sources as well with the enumerators
-		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryById(displaySourceId);
-		SourceContextPtr monitor = sourceFactory->Create("Primary Monitor");
-		obsw->AddToCurrentScene(monitor, "Primary Monitor");
-
-
+		obs_data_t *twitchData = obs_data_create();
+		obs_data_set_string(twitchData, "service", "twitch");
+		obs_data_set_string(twitchData, "server", "rtmp://live-sea.twitch.tv/app");
+		obs_data_set_string(twitchData, "url", "rtmp://live-sea.twitch.tv/app");
+		obs_data_set_string(twitchData, "stream_key_link", "https://dashboard.twitch.tv/settings/stream" );
+		obs_data_set_string(twitchData, "key", privateKey);
+		obs_data_set_string(twitchData, "type", "rtmp_common");
+		obs_data_set_bool(twitchData, "bwtest", false);
 
 		// This will be set as the current output until we set it to something else and everything added to it.
-		obsw->CreateOutput("rtmp_output", "TwitchStream");	// TODO: configure this for twitch
+		obsw->CreateOutput("rtmp_output", "rtmp_output", nullptr, twitchData);
+		obsw->AddScene("TwitchStreamerScene");
 
+		obsw->AddOutputWindow(hwnd);
+
+		obs_data_t *videoEncoderSettings = obs_data_create();
+		obs_data_set_int(videoEncoderSettings, "bitrate", 2500);
+		obs_data_set_int(videoEncoderSettings, "keyrate_sec", 2);
+		obs_data_set_string(videoEncoderSettings, "rate_control", "cbr");
+
+		obs_data_t *audioEncoderSettings = obs_data_create();
+		obs_data_set_int(videoEncoderSettings, "bitrate", 128);
+		obs_data_set_int(videoEncoderSettings, "keyrate_sec", 2);
+		obs_data_set_string(videoEncoderSettings, "rate_control", "cbr");
 
 		auto videoEncoder =
 			obsw->GetEnumerator()
 				->GetVideoEncoderFactoryById("obs_x264")
-				->Create("Video Encoder");
+				->Create("VideoEncoder", videoEncoderSettings);
+		videoEncoder->SetVideo(obs_get_video());
 
 		auto audioEncoder =
 			obsw->GetEnumerator()
 				->GetAudioEncoderFactoryById("CoreAudio_AAC")
-				->Create("Audio Encoder");
-								  
+				->Create("AudioEncoder", audioEncoderSettings);
+		audioEncoder->SetAudio(obs_get_audio());
+
+		/* audioEncoder->SetBitrate(128);
+		audioEncoder->SetKeyRateSec(2);
+		videoEncoder->SetBitrate(2500);
+		videoEncoder->SetKeyRateSec(2);
+		videoEncoder->SetRateControl("cbr");*/
 
 		obsw->SetVideoEncoderOnCurrentOutput(videoEncoder);
 		obsw->SetAudioEncoderOnCurrentOutput(audioEncoder, 0);
 
-		/*ServiceFactoryPtr servicesFactory =
-			obsw->GetEnumerator()
-				->GetServicesFactoryById("rtmp_common")
-				->Create(;*/
+		ServiceFactoryPtr servicesFactory = obsw->GetEnumerator()->GetServiceFactoryById( "rtmp_common");
+		ServiceContextPtr twitchSerive = servicesFactory->Create("TwitchStreamer", twitchData);
 
-		obsw->AddOutputWindow(hwnd);
+		// You can list out all the sources as well with the enumerators
+		SourceFactoryPtr sourceFactory = obsw->GetEnumerator()->GetSourceFactoryById(displaySourceId);
+		SourceContextPtr monitor = sourceFactory->Create("Primary Monitor");
+		SourceContextPtr audio = sourceFactory->Create("sync_audio");
+		SourceContextPtr webcam = sourceFactory->Create("dshow_input");
+
+		obsw->AddToCurrentScene(monitor, "Primary Monitor");
+		obsw->AddToCurrentScene(audio, "Primary Audio");
+
+		if (webcam.get() != nullptr) {
+			vec2 scale = {1.0 / 8.0, 1.0 / 8.0};
+			vec2 position = {1.0 / 10.0, 1.0 / 10.0 };
+			obsw->AddToCurrentScene(webcam, "webcam", scale, position);
+		}
+		
+
+		obsw->SetOutputToCurrentScene(0, *monitor);
+		obsw->SetOutputToCurrentScene(0, *audio);
+		obs_output_set_service(obsw->GetCurrentOutput(), *twitchSerive);
+
 		obsw->Start();
 
 		MSG msg;

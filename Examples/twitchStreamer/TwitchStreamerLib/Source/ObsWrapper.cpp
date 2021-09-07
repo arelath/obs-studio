@@ -18,7 +18,7 @@ using namespace std;
 ObsWrapper::ObsWrapper() : mDisplayFactory("Default")
 {
 	this->mLogger = make_shared<Logger>("ObsWrapper.txt");
-	vec2_set(&mWindowScale, 3.0f, 3.0f);
+	vec2_set(&mWindowScale, 1.0f, 1.0f);
 }
 
 ObsWrapper &ObsWrapper::operator=(const ObsWrapper &)
@@ -39,8 +39,8 @@ bool ObsWrapper::InitObs(
 		throw "Couldn't initialize video";
 
 	obs_audio_info oai = {};
-	oai.speakers = SPEAKERS_MONO;
-	oai.samples_per_sec = 44100;
+	oai.speakers = SPEAKERS_STEREO;
+	oai.samples_per_sec = 48000;
 	if (!obs_reset_audio(&oai))
 		throw "Couldn't initialize audio";
 
@@ -68,12 +68,13 @@ bool ObsWrapper::ResetVideo(
 	ovi.adapter = 0;
 	ovi.base_width = baseWidth;
 	ovi.base_height = baseHeight;
-	ovi.fps_num = 30000;
-	ovi.fps_den = 1001;
+	ovi.fps_num = 30;
+	ovi.fps_den = 1;
 	ovi.graphics_module = "libobs-d3d11";
-	ovi.output_format = VIDEO_FORMAT_RGBA;
+	ovi.output_format = VIDEO_FORMAT_NV12;
 	ovi.output_width = outputWidth;
 	ovi.output_height = outputHeight;
+	ovi.colorspace = VIDEO_CS_709;
 	ovi.scale_type = OBS_SCALE_BILINEAR;
 
 	OBS_RETURN_BOOL(obs_reset_video(&ovi) == 0);
@@ -98,9 +99,9 @@ bool ObsWrapper::ResetWindowSize(HWND hwnd)
 
 	{
 		// This will pause the output so we can resize if if it's enabled and restore it to it's previous state once it's out of scope
-		DisplayContext::PauseDisplayIfRequired displayPause(displayContextPairPtr->second);
+		DisplayContext::PauseDisplayIfRequired displayPause(*(displayContextPairPtr->second));
 
-		OBS_RETURN_BOOL(ResetVideo(workingWidth, workingHeight, windowWidth, windowHeight));
+		OBS_RETURN_BOOL(ResetVideo(workingWidth, workingHeight, 1280, 720));
 	}
 
 	return true;
@@ -110,6 +111,16 @@ ObsWrapper::~ObsWrapper()
 {
 	obs_shutdown();
 	blog(LOG_INFO, "Number of memory leaks: %ld", bnum_allocs());
+}
+
+bool ObsWrapper::AddToCurrentScene(SourceContextPtr source, const string & name, const vec2& scale, const vec2& position)
+{
+	SceneItemContextPtr item = make_shared<SceneItemContext>(
+		obs_scene_add(*mCurrentScene, *source), name);
+	mSceneItems[name] = item;
+
+	OBS_RETURN_IF_FAILED(item->SetItemPosition(position));
+	OBS_RETURN_BOOL(item->SetItemScale(scale));
 }
 
 bool ObsWrapper::AddToCurrentScene(SourceContextPtr source, const string & name)
@@ -134,23 +145,27 @@ bool ObsWrapper::CreateOutput(
 bool ObsWrapper::SetVideoEncoderOnCurrentOutput(VideoEncoderContextPtr encoder)
 {
 	OBS_RETURN_IF_FAILED_MSG(
-		mCurrentOutputContext != nullptr,
-		"Must have a current scene before adding items to it.");
+		mCurrentOutputContext.get() != nullptr,
+		"Must have a current output before adding items to it.");
 
-	obs_output_set_video_encoder(*mCurrentOutputContext, *encoder);
-
-	return true;
+	OBS_RETURN_BOOL(mCurrentOutputContext->SetVideoEncoderToOutput(encoder));
 }
 
-bool ObsWrapper::SetAudioEncoderOnCurrentOutput(AudioEncoderContextPtr encoder, size_t outputChannel)
+bool ObsWrapper::SetAudioEncoderOnCurrentOutput(AudioEncoderContextPtr encoder, size_t audioIndex)
 {
 	OBS_RETURN_IF_FAILED_MSG(
-		mCurrentOutputContext != nullptr,
-		"Must have a current scene before adding items to it.");
+		mCurrentOutputContext.get() != nullptr,
+		"Must have a current output before adding items to it.");
 
-	obs_output_set_audio_encoder(*mCurrentOutputContext, *encoder, outputChannel);
+	OBS_RETURN_BOOL(mCurrentOutputContext->SetAudioEncoderToOutput(encoder, audioIndex));
+}
 
-	return true;
+bool ObsWrapper::SetServiceOnCurrentOutput(ServiceContextPtr service) {
+	OBS_RETURN_IF_FAILED_MSG(
+		mCurrentOutputContext.get() != nullptr,
+		"Must have a current output before adding items to it.");
+
+	OBS_RETURN_BOOL(mCurrentOutputContext->SetService(service));
 }
 
 bool ObsWrapper::AddOutputWindow(HWND hwnd)
@@ -165,6 +180,12 @@ bool ObsWrapper::RemoveOutputWindow(HWND hwnd)
 	auto display = mDisplays.find(hwnd);
 	OBS_RETURN_IF_FAILED(display == mDisplays.end());
 	OBS_RETURN_BOOL(static_cast<bool>(mDisplays.erase(hwnd)));
+}
+
+DisplayContextPtr ObsWrapper::GetOutputWindow(HWND hwnd)
+{
+	auto display = mDisplays.find(hwnd);
+	OBS_RETURN(display->second);
 }
 
 ObsWrapperPtr ObsWrapper::CreateOBSOnPrimaryMonitor(uint32_t ouputWidth, uint32_t outputHeight)
@@ -182,31 +203,20 @@ ObsWrapperPtr ObsWrapper::CreateOBSOnPrimaryMonitor(uint32_t ouputWidth, uint32_
 ObsWrapperPtr ObsWrapper::CreateOBS()
 {
 	ObsWrapperPtr wrapper = ObsWrapperPtr(new ObsWrapper());
-	OBS_LOG_IF_FAILED(wrapper->InitObs(720, 480, 720, 480));
+	OBS_LOG_IF_FAILED(wrapper->InitObs(1920, 1080, 1280, 720));
 	return wrapper;
 }
 
-bool ObsWrapper::Start(uint32_t channel, SceneContextPtr scene)
+bool ObsWrapper::SetOutputToCurrentScene(uint32_t channel, obs_source_t* source)
 {
-	
-	if (scene == nullptr)
-	{
-		if (this->mScenes.empty() == false)
-		{
-			// If a scene wasn't provided, we're going to pick the first one
-			scene = mScenes.begin()->second;
-			blog(LOG_WARNING, "No scene was provided to ObsWrapper::Start(), but scenes exists. Choosing first scene.");
-		}
-		else
-		{
-			// If we don't have a scene, just create a default for ease.
-			OBS_RETURN_IF_FAILED(AddScene("default"));
-		}
-		
-	}
+	obs_set_output_source(channel, source);
 
-	obs_set_output_source(channel, obs_scene_get_source(*scene));
+	return true;
+}
 
+bool ObsWrapper::Start()
+{
+	obs_output_start(*mCurrentOutputContext);
 	return true;
 }
 

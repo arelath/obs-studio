@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Framework.h"
+#include "ObsUtils.h"
 #include "ObsEnumerator.h"
 #include "Contexts/ObsScene.h"
 #include "Contexts/ObsDisplay.h"
@@ -31,15 +32,20 @@ public:
 	ObsEnumerator* GetEnumerator() { return &mObsEnumerator; }
 
 	bool AddToCurrentScene(SourceContextPtr source, const std::string &name);
+	bool AddToCurrentScene(SourceContextPtr source, const std::string & name, const vec2& scale, const vec2& position);
 
 	// Outputs do things like stream or encode vide/audio
 
 	bool AddOutputWindow(HWND hwnd);
 	bool RemoveOutputWindow(HWND hwnd);
+	DisplayContextPtr GetOutputWindow(HWND hwnd);
 
 	bool SetVideoEncoderOnCurrentOutput(VideoEncoderContextPtr videoEnocoder);
 	bool SetAudioEncoderOnCurrentOutput(AudioEncoderContextPtr audioEncoder,
 					    size_t outputChannel = 0);
+	bool SetServiceOnCurrentOutput(ServiceContextPtr service);
+
+	obs_output_t *GetCurrentOutput() { return *mCurrentOutputContext; }
 
 	bool ResetWindowSize(HWND hwnd);
 
@@ -49,8 +55,10 @@ public:
 
 	bool AddScene(const std::string& name);
 	bool RemoveScene(const std::string &name);
-	
-	bool Start(uint32_t channel = 0, SceneContextPtr scene = nullptr);
+
+	bool SetOutputToCurrentScene(uint32_t channel, obs_source_t* source);
+
+	bool Start();
 	bool Stop();
 
 	virtual ~ObsWrapper();

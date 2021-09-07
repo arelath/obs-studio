@@ -36,15 +36,18 @@
 #else
 	#define OBS_LOG_ERROR_NO_MSG() { blog(LOG_ERROR, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
 	#define OBS_LOG_ERROR_MSG(msg) { blog(LOG_ERROR, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
-	#define OBS_LOG_ERROR_IF(x, msg) { blog(LOG_ERROR, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str(); ); }
+	#define OBS_LOG_ERROR_IF(x, msg) { blog(LOG_ERROR, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
+	#define OBS_LOG_WARNING_IF(x, msg) { blog(LOG_WARNING, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
 	#define OBS_LOG_WARNING(msg) { blog(LOG_WARNING, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
 	#define OBS_LOG_INFO(msg) { blog(LOG_INFO, "%s %s", msg, OBS_GET_PROGRAM_PLACE_STRING().c_str()); }
 #endif
 
-
+// These macros let us do extra things when we do common function or make failures easier to log.
+// Also because their macros, changing their behavoir affects the entire library (ie throwing on failures).
 #define OBS_RETURN_IF_FAILED(x) { if((x) == false) { OBS_LOG_ERROR_NO_MSG(); return false; } }
 #define OBS_RETURN_IF_FAILED_MSG(x, msg) { if((x) == false) { OBS_LOG_ERROR_MSG(msg); return false; } }
 #define OBS_RETURN_BOOL(x) { OBS_RETURN_IF_FAILED(x); return true; }
+#define OBS_RETURN(x) { return (x); }
 #define OBS_LOG_IF_FAILED(x) { if ((x) == false) OBS_LOG_ERROR_NO_MSG(); }
 #define OBS_LOG_IF_FAILED_MSG(x, msg) { if ((x) == false) OBS_LOG_ERROR_MSG(msg); }
 

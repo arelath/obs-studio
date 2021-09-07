@@ -12,7 +12,11 @@ class TSL_EXPORT DisplayContext : public ObjectContext {
 
 public:
 	inline DisplayContext(HWND hWnd, uint32_t backgroundColor = 0);
-	inline ~DisplayContext() { obs_display_destroy(display); }
+	inline ~DisplayContext()
+	{
+		obs_display_destroy(display);
+		OBS_LOG_INFO("DisplayContext for HWND destroyed.");
+	}
 	inline operator obs_display_t *() { return display; }
 
 	bool PauseOutput()
@@ -32,24 +36,22 @@ public:
 	// Helper class to pause active outputs and restore them on destruction. 
 	class PauseDisplayIfRequired {
 		bool resumeRequired = true;
-		DisplayContextPtr mDisplay;
+		obs_display_t* mDisplay;
 
 	public:
-		PauseDisplayIfRequired(DisplayContextPtr displayContext)
+		PauseDisplayIfRequired(obs_display_t* displayContext)
 			: mDisplay(displayContext)
 		{
-			obs_display_t *display = *mDisplay;
-			resumeRequired = obs_display_enabled(display);
+			resumeRequired = obs_display_enabled(mDisplay);
 			if (resumeRequired)
-				obs_display_set_enabled(display, false);
+				obs_display_set_enabled(mDisplay, false);
 		}
 
 		~PauseDisplayIfRequired()
 		{
 			if (resumeRequired)
 			{
-				obs_display_t *display = *mDisplay;
-				obs_display_set_enabled(display, true);
+				obs_display_set_enabled(mDisplay, true);
 			}
 		}
 	};

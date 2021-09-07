@@ -22,4 +22,10 @@ public:
 		obs_sceneitem_set_scale(source, &scale);
 		return true;
 	}
+
+	bool SetItemPosition(const vec2 &position)
+	{
+		obs_sceneitem_set_pos(source, &position);
+		return true;
+	}
 };

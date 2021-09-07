@@ -3,11 +3,11 @@
 #include "obs.h"
 #include "ObsEnumerator.h"
 
-#include "Contexts/ObsObjectDescriptors.h"
 #include "Contexts/ObsAudio.h"
-#include "Contexts/ObsSource.h"
 #include "Contexts/ObsDisplay.h"
 #include "Contexts/ObsEncoder.h"
+#include "Contexts/ObsServices.h"
+#include "Contexts/ObsSource.h"
 #include "Contexts/ObsOutputs.h"
 
 using namespace std;
@@ -28,7 +28,7 @@ void ObsEnumerator::EnumerateSources()
 
 		SourceFactoryMap.emplace(
 			string(id),
-			make_shared<SourceFactory>(SourceDescriptor(id)));
+			make_shared<SourceFactory>(id));
 	}
 
 	index = 0;
@@ -37,16 +37,7 @@ void ObsEnumerator::EnumerateSources()
 
 		this->FilterFactoryMap.emplace(
 			string(id),
-			make_shared <FilterFactory>(SourceDescriptor(id)));
-	}
-
-	index = 0;
-	while (obs_enum_service_types(index++, &id)) {
-		cout << "Found Service " << id << endl;
-
-		//this->FilterFactoryMap.emplace(
-		//	string(id),
-		//	make_shared<ServiceFactory>(SourceDescriptor(id)));
+			make_shared <FilterFactory>(id));
 	}
 
 	index = 0;
@@ -69,23 +60,25 @@ void ObsEnumerator::EnumerateSources()
 			     "Unsupported uncoder type for encoder %s",
 			     encoderDescriptor.GetTypeName());
 		}
-		}
+	}
 
 	index = 0;
 	while (obs_enum_output_types(index++, &id))
 	{
 		cout << "Found Output Type " << id << endl;
 
-		OutputFactoryMap.emplace(id, make_shared<OutputFactory>(id));
+		OutputFactoryMap.emplace(
+			string(id),
+			make_shared<OutputFactory>(id));
 	}
 
 	index = 0;
 	while (obs_enum_service_types(index++, &id)) {
 		cout << "Found Service Type " << id << endl;
 
-		//this->FilterFactoryMap.emplace(
-		//	string(id),
-		//	make_shared<ServiceFactory>(SourceDescriptor(id)));
+		ServiceFactoryMap.emplace(
+			string(id),
+			make_shared<ServiceFactory>(id));
 	}
 }
 
@@ -98,12 +91,6 @@ FilterFactoryPtr ObsEnumerator::GetFilterFactoryById(const std::string &id)
 {
 	return FilterFactoryMap[id];
 }
-
-ServiceFactoryPtr ObsEnumerator::GetServicesFactoryById(const std::string &id)
-{
-	return ServiceFactoryMap[id];
-}
-
 
 VideoEncoderFactoryPtr ObsEnumerator::GetVideoEncoderFactoryById(const std::string &id)
 {
@@ -118,5 +105,10 @@ AudioEncoderFactoryPtr ObsEnumerator::GetAudioEncoderFactoryById(const std::stri
 OutputFactoryPtr ObsEnumerator::GetOutputFactoryById(const std::string& id)
 {
 	return OutputFactoryMap[id];
+}
+
+ServiceFactoryPtr ObsEnumerator::GetServiceFactoryById(const std::string &id)
+{
+	return ServiceFactoryMap[id];
 }
 

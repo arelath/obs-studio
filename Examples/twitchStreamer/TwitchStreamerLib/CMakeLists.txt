@@ -11,6 +11,7 @@ set(TwitchStreamerLib_HEADERS
 	Include/MonitorUtils.h
 	Include/ObsWrapper.h
 	Include/ObsEnumerator.h
+	Include/ObsUtils.h
 	Include/TwitchStreamingLib.h)
 
 set(TwitchStreamerLib_Contexts_HEADERS
@@ -20,7 +21,6 @@ set(TwitchStreamerLib_Contexts_HEADERS
 	Include/Contexts/ObsDisplay.h
 	Include/Contexts/ObsEncoder.h
 	Include/Contexts/ObsFilter.h
-	Include/Contexts/ObsObjectDescriptors.h
 	Include/Contexts/ObsOutputs.h
 	Include/Contexts/ObsScene.h
 	Include/Contexts/ObsSceneItem.h
@@ -34,7 +34,9 @@ set(TwitchStreamerLib_SOURCES
 	Source/MonitorUtils.cpp
 	Source/ObsWrapper.cpp
 	Source/ObsEnumerator.cpp
-	Source/ObsDisplay.cpp)
+	Source/ObsDisplay.cpp
+	Source/ObsServices.cpp
+	Source/ObsUtils.cpp)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 

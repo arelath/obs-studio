@@ -21,9 +21,7 @@ protected:
 	SourceDescriptor mSourceDescriptor;
 
 public:
-	SourceFactory(const SourceDescriptor& sourceDescriptor) : mSourceDescriptor(sourceDescriptor)
-	{
-	}
+	SourceFactory(const char * id) : mSourceDescriptor(id) {}
 
 	virtual SourceContextPtr Create(const std::string & name)
 	{
